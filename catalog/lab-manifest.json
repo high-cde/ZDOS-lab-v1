@@ -1,0 +1,53 @@
+{
+  "schema": "zdos-lab/v1",
+  "name": "ZDOS Lab",
+  "owner": "High-cde",
+  "contact": "Highkali13@proton.me",
+  "policy": "default-deny",
+  "source_of_truth": "official-repositories",
+  "components": [
+    {
+      "id": "zdos",
+      "name": "ZDOS",
+      "role": "kernel distro build evidence-chain",
+      "remote": "https://github.com/high-cde/ZDOS.git",
+      "local_path": "../ZDOS",
+      "status": "VERIFIED",
+      "verified_scope": "x86_64 Linux ISO, bare-metal QEMU path, ZLB2 boot contract"
+    },
+    {
+      "id": "zlang",
+      "name": "Zlang",
+      "role": "compiler runtime VM and ZLB2 contract",
+      "remote": "https://github.com/high-cde/Zlang.git",
+      "local_path": "../Zlang",
+      "status": "VERIFIED",
+      "verified_scope": "ZLB2 v2.5 compiler path and bytecode contract"
+    },
+    {
+      "id": "zdos-sec-portal",
+      "name": "ZDOS-SEC-PORTAL",
+      "role": "operational HUD and evidence workspace",
+      "remote": "https://github.com/high-cde/ZDOS-SEC-PORTAL.git",
+      "local_path": "../ZDOS-SEC-PORTAL",
+      "status": "EXPERIMENTAL",
+      "verified_scope": "local portal flow, not public production deployment"
+    }
+  ],
+  "targets": {
+    "x86_64": "VERIFIED",
+    "aarch64": "PREPARED",
+    "riscv64": "PREPARED",
+    "i686": "NOT_VERIFIED",
+    "armv7": "NOT_VERIFIED",
+    "mips64": "NOT_VERIFIED"
+  },
+  "sync": {
+    "mode": "fast-forward-only",
+    "allow_force_push": false,
+    "allow_destructive_reset": false,
+    "require_clean_worktree": true,
+    "require_remote": true,
+    "require_authentication": true
+  }
+}

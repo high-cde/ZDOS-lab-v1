@@ -1,0 +1,137 @@
+#!/usr/bin/env bash
+set -Eeuo pipefail
+IFS=$'\n\t'
+
+LAB_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+MANIFEST="$LAB_ROOT/catalog/lab-manifest.json"
+WORKSPACE_ROOT="${ZDOS_LAB_WORKSPACE:-$(cd "$LAB_ROOT/.." && pwd)}"
+
+need_cmd() { command -v "$1" >/dev/null 2>&1 || { echo "[ZDOS-LAB][ERROR] missing command: $1" >&2; exit 1; }; }
+repo_path() { printf '%s/%s' "$WORKSPACE_ROOT" "$1"; }
+
+inspect() {
+  need_cmd python3
+  python3 - "$MANIFEST" "$WORKSPACE_ROOT" <<'PY'
+import json, subprocess, sys
+from pathlib import Path
+manifest = json.loads(Path(sys.argv[1]).read_text())
+root = Path(sys.argv[2])
+print('ZDOS LAB inspection')
+print(f"schema: {manifest['schema']}")
+print(f"policy: {manifest['policy']}")
+for component in manifest['components']:
+    path = (root / Path(component['local_path']).name).resolve()
+    present = path.is_dir()
+    commit = 'unknown'
+    if present:
+        try:
+            commit = subprocess.check_output(['git','-C',str(path),'rev-parse','--short','HEAD'], text=True).strip()
+        except Exception:
+            pass
+    print(f"{component['id']}: {component['status']} present={str(present).lower()} commit={commit}")
+for target, status in manifest['targets'].items():
+    print(f"target {target}: {status}")
+PY
+}
+
+manifest() {
+  need_cmd python3
+  mkdir -p "$LAB_ROOT/artifacts"
+  python3 - "$MANIFEST" "$WORKSPACE_ROOT" "$LAB_ROOT/artifacts/lab-state.json" <<'PY'
+import hashlib, json, subprocess, sys, time
+from pathlib import Path
+source = json.loads(Path(sys.argv[1]).read_text())
+root = Path(sys.argv[2])
+output = Path(sys.argv[3])
+components = []
+for item in source['components']:
+    path = (root / Path(item['local_path']).name).resolve()
+    commit = 'unknown'
+    dirty = None
+    if path.is_dir():
+        try:
+            commit = subprocess.check_output(['git','-C',str(path),'rev-parse','HEAD'], text=True).strip()
+            dirty = bool(subprocess.check_output(['git','-C',str(path),'status','--porcelain'], text=True).strip())
+        except Exception:
+            pass
+    components.append({**item, 'resolved_path': str(path), 'commit': commit, 'dirty': dirty})
+result = {'schema':'zdos-lab-state/v1', 'generated_at_utc':time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime()), 'policy':source['policy'], 'components':components, 'targets':source['targets']}
+canonical = json.dumps(result, ensure_ascii=False, sort_keys=True, separators=(',',':')).encode()
+result['state_sha256'] = hashlib.sha256(canonical).hexdigest()
+output.write_text(json.dumps(result, ensure_ascii=False, sort_keys=True, indent=2) + '\n')
+print(json.dumps({'output':str(output),'components':len(components),'state_sha256':result['state_sha256']}, indent=2))
+PY
+}
+
+sync() {
+  local mode="${1:-check}"
+  [[ "$mode" == check || "$mode" == apply ]] || { echo "usage: $0 sync [--check|--apply]" >&2; exit 2; }
+  need_cmd git
+  need_cmd python3
+  python3 - "$MANIFEST" "$WORKSPACE_ROOT" "$mode" <<'PY'
+import json, subprocess, sys
+from pathlib import Path
+manifest = json.loads(Path(sys.argv[1]).read_text())
+root = Path(sys.argv[2])
+mode = sys.argv[3]
+failed = False
+for item in manifest['components']:
+    path = (root / Path(item['local_path']).name).resolve()
+    print(f"[ZDOS-LAB] {mode}: {item['id']} -> {item['remote']}")
+    if not path.is_dir():
+        print('  status=missing; action=clone externally or add local clone')
+        failed = True
+        continue
+    dirty = subprocess.check_output(['git','-C',str(path),'status','--porcelain'], text=True).strip()
+    remote = subprocess.run(['git','-C',str(path),'remote','get-url','origin'], text=True, capture_output=True)
+    if dirty:
+        print('  status=blocked; reason=working-tree-not-clean')
+        failed = True
+        continue
+    if remote.returncode != 0:
+        print('  status=blocked; reason=origin-missing')
+        failed = True
+        continue
+    print(f'  origin={remote.stdout.strip()}')
+    if mode == 'apply':
+        fetch = subprocess.run(['git','-C',str(path),'fetch','--prune','origin'], text=True)
+        if fetch.returncode:
+            failed = True
+            continue
+        branch = subprocess.check_output(['git','-C',str(path),'branch','--show-current'], text=True).strip() or 'main'
+        upstream = f'origin/{branch}'
+        base = subprocess.run(['git','-C',str(path),'merge-base','--is-ancestor','HEAD',upstream])
+        if base.returncode == 0:
+            pull = subprocess.run(['git','-C',str(path),'merge','--ff-only',upstream], text=True)
+            if pull.returncode:
+                failed = True
+            else:
+                print(f'  status=updated; mode=fast-forward-only; branch={branch}')
+        else:
+            ahead = subprocess.run(['git','-C',str(path),'merge-base','--is-ancestor',upstream,'HEAD'])
+            if ahead.returncode == 0:
+                print(f'  status=local-ahead; branch={branch}')
+            else:
+                print(f'  status=blocked; reason=diverged-history; branch={branch}')
+                failed = True
+print('[ZDOS-LAB] sync blocked by one or more safety checks' if failed else f'[ZDOS-LAB] sync {mode} completed')
+raise SystemExit(1 if failed else 0)
+PY
+}
+
+gate() {
+  need_cmd bash
+  need_cmd python3
+  bash -n "$WORKSPACE_ROOT/ZDOS/scripts/zdos-unified-build.sh"
+  python3 "$WORKSPACE_ROOT/ZDOS/tools/zdosctl.py" inspect >/dev/null
+  python3 "$WORKSPACE_ROOT/ZDOS/tools/zdosctl.py" policy check "$WORKSPACE_ROOT/ZDOS/policies/diagnostic-readonly.json" >/dev/null
+  echo '[ZDOS-LAB] gate passed: builder syntax, zdosctl inspect and default-deny policy'
+}
+
+case "${1:-}" in
+  inspect) inspect ;;
+  manifest) manifest ;;
+  sync) sync "${2#--}" ;;
+  gate) gate ;;
+  *) echo "usage: $0 {inspect|manifest|sync [--check|--apply]|gate}" >&2; exit 2 ;;
+esac
