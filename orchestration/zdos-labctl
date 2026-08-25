@@ -122,10 +122,22 @@ PY
 gate() {
   need_cmd bash
   need_cmd python3
-  bash -n "$WORKSPACE_ROOT/ZDOS/scripts/zdos-unified-build.sh"
-  python3 "$WORKSPACE_ROOT/ZDOS/tools/zdosctl.py" inspect >/dev/null
-  python3 "$WORKSPACE_ROOT/ZDOS/tools/zdosctl.py" policy check "$WORKSPACE_ROOT/ZDOS/policies/diagnostic-readonly.json" >/dev/null
-  echo '[ZDOS-LAB] gate passed: builder syntax, zdosctl inspect and default-deny policy'
+  local zdos_root="$WORKSPACE_ROOT/ZDOS"
+  [[ -d "$zdos_root" ]] || { echo '[ZDOS-LAB][ERROR] ZDOS checkout missing' >&2; return 1; }
+  [[ -f "$zdos_root/distro/build.sh" ]] || { echo '[ZDOS-LAB][ERROR] distro/build.sh missing' >&2; return 1; }
+  [[ -f "$zdos_root/distro/test-qemu.sh" ]] || { echo '[ZDOS-LAB][ERROR] distro/test-qemu.sh missing' >&2; return 1; }
+  [[ -f "$zdos_root/os/x86_64/Makefile" ]] || { echo '[ZDOS-LAB][ERROR] x86_64 Makefile missing' >&2; return 1; }
+  [[ -f "$zdos_root/evidence/policy.release.json" ]] || { echo '[ZDOS-LAB][ERROR] release policy missing' >&2; return 1; }
+  bash -n "$zdos_root/distro/build.sh" "$zdos_root/distro/test-qemu.sh" "$zdos_root/os/x86_64/update_and_build.sh"
+  python3 - "$zdos_root/evidence/policy.release.json" <<'PY'
+import json, sys
+from pathlib import Path
+policy = json.loads(Path(sys.argv[1]).read_text())
+if not isinstance(policy, dict) or not policy:
+    raise SystemExit('release policy is empty or invalid')
+print('[ZDOS-LAB] release policy parsed')
+PY
+  echo '[ZDOS-LAB] gate passed: ZDOS entrypoints, x86_64 Makefile, and release policy'
 }
 
 case "${1:-}" in

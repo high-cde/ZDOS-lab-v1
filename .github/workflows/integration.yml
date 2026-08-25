@@ -1,0 +1,93 @@
+name: ZDOS Ecosystem Integration
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  integration-gate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout lab
+        uses: actions/checkout@v4
+
+      - name: Checkout official sources
+        uses: actions/checkout@v4
+        with:
+          repository: high-cde/ZDOS
+          path: ZDOS
+      - uses: actions/checkout@v4
+        with:
+          repository: high-cde/Zlang
+          path: Zlang
+      - uses: actions/checkout@v4
+        with:
+          repository: high-cde/zdos-organism
+          path: zdos-organism
+      - uses: actions/checkout@v4
+        with:
+          repository: high-cde/ZDOS-SEC-PORTAL
+          path: ZDOS-SEC-PORTAL
+      - uses: actions/checkout@v4
+        with:
+          repository: high-cde/Z-CYBERCORE
+          path: Z-CYBERCORE
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: ZDOS-SEC-PORTAL/package-lock.json
+
+      - name: Set up Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+
+      - name: Verify Zlang compiler contract
+        working-directory: Zlang
+        run: python3 -m unittest discover -s tests -p 'test_*.py' -v
+
+      - name: Verify Rust runtimes
+        run: |
+          cargo test --manifest-path Zlang/Cargo.toml --all-targets
+          cargo test --manifest-path zdos-organism/Cargo.toml --workspace --all-targets --all-features
+          cargo test --manifest-path Z-CYBERCORE/Cargo.toml --all-targets
+
+      - name: Verify SEC Portal
+        working-directory: ZDOS-SEC-PORTAL
+        run: npm ci --ignore-scripts && npm test
+
+      - name: Verify Lab contract and safe gate
+        env:
+          ZDOS_LAB_WORKSPACE: ${{ github.workspace }}
+        run: |
+          bash -n orchestration/zdos-labctl
+          ./orchestration/zdos-labctl inspect
+          ./orchestration/zdos-labctl gate
+          python3 orchestration/zdos-lab-pack.py --component unified --output-dir "$RUNNER_TEMP/zdos-artifacts"
+
+      - name: Generate integration manifest
+        env:
+          ZDOS_LAB_WORKSPACE: ${{ github.workspace }}
+        run: ./orchestration/zdos-labctl manifest
+
+      - name: Upload integration manifest
+        uses: actions/upload-artifact@v4
+        with:
+          name: zdos-integration-manifest
+          path: |
+            artifacts/lab-state.json
+            ${{ runner.temp }}/zdos-artifacts/SHA256SUMS*

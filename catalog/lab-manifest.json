@@ -25,13 +25,31 @@
       "verified_scope": "ZLB2 v2.5 compiler path and bytecode contract"
     },
     {
+      "id": "zdos-organism",
+      "name": "zdos-organism",
+      "role": "local organism runtime and ZLang/ZVM execution bridge",
+      "remote": "https://github.com/high-cde/zdos-organism.git",
+      "local_path": "../zdos-organism",
+      "status": "VERIFIED",
+      "verified_scope": "Rust workspace tests, deterministic --eval and single-cycle --once"
+    },
+    {
       "id": "zdos-sec-portal",
       "name": "ZDOS-SEC-PORTAL",
-      "role": "operational HUD and evidence workspace",
+      "role": "operational HUD, local API and evidence workspace",
       "remote": "https://github.com/high-cde/ZDOS-SEC-PORTAL.git",
       "local_path": "../ZDOS-SEC-PORTAL",
       "status": "EXPERIMENTAL",
-      "verified_scope": "local portal flow, not public production deployment"
+      "verified_scope": "local HTTP/UI flow, authenticated compile gate, not public production deployment"
+    },
+    {
+      "id": "z-cybercore",
+      "name": "Z-CYBERCORE",
+      "role": "safe cyber-security demonstration component",
+      "remote": "https://github.com/high-cde/Z-CYBERCORE.git",
+      "local_path": "../Z-CYBERCORE",
+      "status": "EXPERIMENTAL",
+      "verified_scope": "Rust compilation only; packet analysis remains simulated and non-operational"
     }
   ],
   "targets": {

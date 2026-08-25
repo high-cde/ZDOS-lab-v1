@@ -22,7 +22,9 @@ WORKSPACE = Path(__import__("os").environ.get("ZDOS_LAB_WORKSPACE", ROOT.parent)
 COMPONENTS = {
     "zdos": WORKSPACE / "ZDOS",
     "zlang": WORKSPACE / "Zlang",
+    "organism": WORKSPACE / "zdos-organism",
     "sec": WORKSPACE / "ZDOS-SEC-PORTAL",
+    "cybercore": WORKSPACE / "Z-CYBERCORE",
 }
 EXCLUDE_PARTS = {".git", "target", "node_modules", "__pycache__", "dist", "out"}
 
@@ -80,8 +82,8 @@ def write_launchers(stage: Path, component: str) -> None:
         windows = "@echo off\r\nsetlocal\r\nset ROOT=%~dp0..\r\nwhere py >nul 2>nul && (py -3 \"%ROOT%\\ZDOS\\tools\\zdosctl.py\" %* & exit /b %errorlevel%)\r\npython \"%ROOT%\\ZDOS\\tools\\zdosctl.py\" %*\r\n"
         (bin_dir / "zdosctl").write_text(posix, encoding="utf-8")
         (bin_dir / "zdosctl.cmd").write_text(windows, encoding="utf-8")
-    else:
-        windows = "@echo off\r\nsetlocal\r\ncd /d \"%~dp0..\\SEC\"\r\nwhere npm >nul 2>nul || (echo Node.js/npm required. & exit /b 1)\r\nnpm install\r\nnpm start\r\n"
+    elif component == "sec":
+        windows = "@echo off\r\nsetlocal\r\ncd /d \"%~dp0..\\SEC\"\r\nwhere npm >nul 2>nul || (echo Node.js/npm required. & exit /b 1)\r\nnpm ci\r\nnpm start\r\n"
         (bin_dir / "zdos-sec-start.cmd").write_text(windows, encoding="utf-8")
 
 
@@ -134,7 +136,7 @@ def build_bundle(name: str, output: Path) -> dict:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="Build non-ISO portable ZDOS Lab bundles")
-    parser.add_argument("--component", choices=["zdos", "zlang", "sec", "unified"], default="unified")
+    parser.add_argument("--component", choices=["zdos", "zlang", "organism", "sec", "cybercore", "unified"], default="unified")
     parser.add_argument("--output-dir", default=str(ROOT / "artifacts" / "portable"))
     args = parser.parse_args()
     output_dir = Path(args.output_dir).resolve()
