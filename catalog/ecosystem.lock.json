@@ -5,11 +5,11 @@
   "sources": {
     "ZDOS": {
       "repository": "high-cde/ZDOS",
-      "commit": "6d33514793568259c765997064223743031d3ef0"
+      "commit": "ddf7f52dc42076dd90d849ad1b3b714ae694e8d4"
     },
     "Zlang": {
       "repository": "high-cde/Zlang",
-      "commit": "74958a3452897694f022ebfc8e2097702f3ba73a"
+      "commit": "65e5c41f9b28b349c9ba18cda26b4ea8d5125833"
     },
     "zdos-organism": {
       "repository": "high-cde/zdos-organism",
