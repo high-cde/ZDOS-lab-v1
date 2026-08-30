@@ -123,12 +123,17 @@ gate() {
   need_cmd bash
   need_cmd python3
   local zdos_root="$WORKSPACE_ROOT/ZDOS"
+  local zlang_root="$WORKSPACE_ROOT/Zlang"
   [[ -d "$zdos_root" ]] || { echo '[ZDOS-LAB][ERROR] ZDOS checkout missing' >&2; return 1; }
+  [[ -d "$zlang_root" ]] || { echo '[ZDOS-LAB][ERROR] Zlang checkout missing' >&2; return 1; }
   [[ -f "$zdos_root/distro/build.sh" ]] || { echo '[ZDOS-LAB][ERROR] distro/build.sh missing' >&2; return 1; }
   [[ -f "$zdos_root/distro/test-qemu.sh" ]] || { echo '[ZDOS-LAB][ERROR] distro/test-qemu.sh missing' >&2; return 1; }
   [[ -f "$zdos_root/os/x86_64/Makefile" ]] || { echo '[ZDOS-LAB][ERROR] x86_64 Makefile missing' >&2; return 1; }
   [[ -f "$zdos_root/evidence/policy.release.json" ]] || { echo '[ZDOS-LAB][ERROR] release policy missing' >&2; return 1; }
   bash -n "$zdos_root/distro/build.sh" "$zdos_root/distro/test-qemu.sh" "$zdos_root/os/x86_64/update_and_build.sh"
+  bash "$zdos_root/scripts/check-repository-hygiene.sh"
+  python3 "$zlang_root/tools/check_repository_hygiene.py"
+  bash "$LAB_ROOT/orchestration/check-repository-hygiene.sh"
   python3 - "$zdos_root/evidence/policy.release.json" <<'PY'
 import json, sys
 from pathlib import Path
@@ -137,7 +142,7 @@ if not isinstance(policy, dict) or not policy:
     raise SystemExit('release policy is empty or invalid')
 print('[ZDOS-LAB] release policy parsed')
 PY
-  echo '[ZDOS-LAB] gate passed: ZDOS entrypoints, x86_64 Makefile, and release policy'
+  echo '[ZDOS-LAB] gate passed: entrypoints, repository hygiene, x86_64 Makefile, and release policy'
 }
 
 case "${1:-}" in

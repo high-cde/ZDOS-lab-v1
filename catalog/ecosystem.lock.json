@@ -1,0 +1,27 @@
+{
+  "schema": "zdos-ecosystem-lock/v1",
+  "purpose": "immutable source revisions for the integration and release gates",
+  "generated_at_utc": "2026-08-30T00:00:00Z",
+  "sources": {
+    "ZDOS": {
+      "repository": "high-cde/ZDOS",
+      "commit": "ddf7f52dc42076dd90d849ad1b3b714ae694e8d4"
+    },
+    "Zlang": {
+      "repository": "high-cde/Zlang",
+      "commit": "65e5c41f9b28b349c9ba18cda26b4ea8d5125833"
+    },
+    "zdos-organism": {
+      "repository": "high-cde/zdos-organism",
+      "commit": "e70a465f7c7eb8655f08e4003bfa1eb47ef386f9"
+    },
+    "ZDOS-SEC-PORTAL": {
+      "repository": "high-cde/ZDOS-SEC-PORTAL",
+      "commit": "47247dfd3eff79fbd0078b4187547dba37ac4818"
+    },
+    "Z-CYBERCORE": {
+      "repository": "high-cde/Z-CYBERCORE",
+      "commit": "e8637a4e59e454a0b8bc0f748d4ed0d9bd5de4a0"
+    }
+  }
+}
