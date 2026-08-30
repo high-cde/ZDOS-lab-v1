@@ -1,0 +1,16 @@
+# Generated integration state and distributable bundles
+/artifacts/lab-state.json
+/artifacts/portable/
+!/artifacts/.gitkeep
+!/artifacts/portable/.gitkeep
+
+# Language and test caches
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# Local tooling and operating-system files
+.DS_Store
+.idea/
+.vscode/
+*.swp

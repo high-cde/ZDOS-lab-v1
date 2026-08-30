@@ -21,23 +21,38 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: high-cde/ZDOS
+          ref: 6d33514793568259c765997064223743031d3ef0
           path: ZDOS
       - uses: actions/checkout@v4
         with:
           repository: high-cde/Zlang
+          ref: 74958a3452897694f022ebfc8e2097702f3ba73a
           path: Zlang
       - uses: actions/checkout@v4
         with:
           repository: high-cde/zdos-organism
+          ref: e70a465f7c7eb8655f08e4003bfa1eb47ef386f9
           path: zdos-organism
       - uses: actions/checkout@v4
         with:
           repository: high-cde/ZDOS-SEC-PORTAL
+          ref: 47247dfd3eff79fbd0078b4187547dba37ac4818
           path: ZDOS-SEC-PORTAL
       - uses: actions/checkout@v4
         with:
           repository: high-cde/Z-CYBERCORE
+          ref: e8637a4e59e454a0b8bc0f748d4ed0d9bd5de4a0
           path: Z-CYBERCORE
+
+      - name: Verify ZDOS repository hygiene
+        run: bash ZDOS/scripts/check-repository-hygiene.sh
+
+      - name: Verify Zlang repository hygiene
+        working-directory: Zlang
+        run: python3 tools/check_repository_hygiene.py
+
+      - name: Verify Lab repository hygiene
+        run: bash orchestration/check-repository-hygiene.sh
 
       - name: Set up Python
         uses: actions/setup-python@v5
