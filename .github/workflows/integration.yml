@@ -21,12 +21,12 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: high-cde/ZDOS
-          ref: 6d33514793568259c765997064223743031d3ef0
+          ref: ddf7f52dc42076dd90d849ad1b3b714ae694e8d4
           path: ZDOS
       - uses: actions/checkout@v4
         with:
           repository: high-cde/Zlang
-          ref: 74958a3452897694f022ebfc8e2097702f3ba73a
+          ref: 65e5c41f9b28b349c9ba18cda26b4ea8d5125833
           path: Zlang
       - uses: actions/checkout@v4
         with:
