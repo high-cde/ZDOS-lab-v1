@@ -2,6 +2,12 @@
 
 ## Il forge operativo di ZDOS e Zlang
 
+[![ZDOS Ecosystem Integration](https://github.com/high-cde/ZDOS-lab-v1/actions/workflows/integration.yml/badge.svg)](https://github.com/high-cde/ZDOS-lab-v1/actions/workflows/integration.yml) [![Latest prerelease](https://img.shields.io/github/v/release/high-cde/ZDOS-lab-v1?include_prereleases&label=release)](https://github.com/high-cde/ZDOS-lab-v1/releases)
+
+**ZDOS Lab v1** è un forge operativo source-first per coordinare l’ecosistema ZDOS. La prerelease corrente è **`v1.0.0-beta.1`**: contiene bundle portabili e prove di integrazione, ma non è un ISO avviabile e non include ancora un APK Android.
+
+**Package disponibili:** `zdos-lab-unified`, `zdos-lab-zdos`, `zdos-lab-zlang` e `zdos-lab-sec` nei formati `.tar.gz` e `.zip`, accompagnati dai file `SHA256SUMS-*`. La guida completa è in [`docs/RELEASE_V1.0.0-BETA.1.md`](docs/RELEASE_V1.0.0-BETA.1.md).
+
 ZDOS Lab è il contenitore tecnico dell’ecosistema ZDOS: riunisce sorgenti, specifiche, runtime, kernel, distro, Evidence Chain, policy, portale SEC, test, profili hardware e artefatti di build in un unico spazio operativo. Non sostituisce i repository ufficiali: li coordina, li identifica e li sincronizza senza perdere la provenienza.
 
 > **One lab. Two official sources. Zero ambiguous mirrors.**
